@@ -55,9 +55,9 @@ public:
     
     void AddDocument(int document_id, const string& document) {
         const vector<string> words = SplitIntoWordsNoStop(document);
+        const int TF_one_word = 1.0 / words.size();
         for (const string& word : words) {
-            documents_[word].insert({document_id, 0});
-            documents_[word][document_id] += 1.0 / words.size();
+            documents_[word][document_id] += TF_one_word;
         }
         
         ++documents_all_count_;
@@ -116,6 +116,10 @@ private:
         return query_words;
     }
 
+    float IDF(const string& word) const {
+        return static_cast<float>(log(static_cast<float>(documents_all_count_) / documents_.at(word).size()));
+    }
+
     vector<Document> FindAllDocuments(const set<string>& query_words) const {
         vector<Document> matched_documents;
         map<int, double> plus_words;
@@ -123,9 +127,7 @@ private:
         for (const string& word : query_words) {
             if (documents_.count(word) > 0) {
                 for (const auto& i : documents_.at(word)) {
-                    plus_words[i.first] += i.second * log(
-                        static_cast<float>(documents_all_count_) / documents_.at(word).size()
-                    );
+                    plus_words[i.first] += i.second * IDF(word);
                 }
             }
         }

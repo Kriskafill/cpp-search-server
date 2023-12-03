@@ -116,7 +116,7 @@ private:
         return query_words;
     }
 
-    float IDF(const string& word) const {
+    double CalcIDF(const string& word) const {
         return static_cast<float>(log(static_cast<float>(documents_all_count_) / documents_.at(word).size()));
     }
 
@@ -127,7 +127,7 @@ private:
         for (const string& word : query_words) {
             if (documents_.count(word) > 0) {
                 for (const auto& i : documents_.at(word)) {
-                    plus_words[i.first] += i.second * IDF(word);
+                    plus_words[i.first] += i.second * CalcIDF(word);
                 }
             }
         }

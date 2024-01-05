@@ -60,6 +60,14 @@ set<string> MakeUniqueNonEmptyStrings(const StringContainer& strings) {
     return non_empty_strings;
 }
 
+bool TextContainsSpecialCharacters(const string& text) {
+    for (const char c : text) {
+        if (c >= 0 && c <= 31) return true;
+    }
+
+    return false;
+}
+
 struct Document {
     Document() = default;
 
@@ -86,18 +94,14 @@ public:
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words) : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
         for (const string& word : stop_words_) {
-            for (const char c : word) {
-                if (c >= 0 && c <= 31) throw invalid_argument("special character in stop words"s);
-            }
+            if (TextContainsSpecialCharacters(word)) throw invalid_argument("special character in stop words"s);
         }
     }
 
     explicit SearchServer(const string& stop_words_text) : SearchServer(SplitIntoWords(stop_words_text)) {}
     
     void AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
-        for (const char c : document) {
-            if (c >= 0 && c <= 31) throw invalid_argument("special character in the document"s);
-        }
+        if (TextContainsSpecialCharacters(document)) throw invalid_argument("special character in the document"s);
 
         if (document_id < 0) throw invalid_argument("negative ID"s);
         for (const auto& id : documents_) {
@@ -111,18 +115,12 @@ public:
         }
         
         documents_.emplace(document_id, DocumentData{ComputeAverageRating(ratings), status});
+        identifiers_.push_back(document_id);
     }
 
     template <typename KeyMapper>
     vector<Document> FindTopDocuments(const string& raw_query, KeyMapper key_mapper) const {
-        for (const char c : raw_query) {
-            if (c >= 0 && c <= 31) throw invalid_argument("special character in the request"s);
-        }
-
         const Query query = ParseQuery(raw_query);
-        for (const string& word : query.minus_words) {
-            if (word == ""s || word.at(0) == '-') throw invalid_argument("invalid request"s);
-        }
 
         auto matched_documents = FindAllDocuments(query, key_mapper);
 
@@ -152,15 +150,8 @@ public:
     }
 
     int GetDocumentId(int index) const {
-        if (index < 0 || index > documents_.size() - 1) throw out_of_range("the ID is out of acceptable values"s);
-
-        int i = 0;
-        for (const auto& document : documents_) {
-            if (i == index) return document.first;
-            else ++i;
-        }
-
-        return 0;
+        if (index < 0 || index > identifiers_.size() - 1) throw out_of_range("the ID is out of acceptable values"s);
+        return identifiers_[index];
     }
 
     int GetDocumentCount() const {
@@ -168,14 +159,7 @@ public:
     }
 
     tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query, int document_id) const {
-        for (const char c : raw_query) {
-            if (c >= 0 && c <= 31) throw invalid_argument("special character in the request"s);
-        }
-
         const Query query = ParseQuery(raw_query);
-        for (const string& word : query.minus_words) {
-            if (word == ""s || word.at(0) == '-') throw invalid_argument("invalid request"s);
-        }
 
         vector<string> matched_words;
 
@@ -211,6 +195,7 @@ private:
     const set<string> stop_words_;
     map<string, map<int, double>> word_to_document_freqs_;
     map<int, DocumentData> documents_;
+    vector<int> identifiers_;
 
     bool IsStopWord(const string& word) const {
         return stop_words_.count(word) > 0;
@@ -251,6 +236,7 @@ private:
             text = text.substr(1);
         }
 
+        if (text == ""s || text.at(0) == '-') throw invalid_argument("invalid request"s);
         return {text, is_minus, IsStopWord(text)};
     }
 
@@ -263,6 +249,8 @@ private:
         Query query;
 
         for (const string& word : SplitIntoWords(text)) {
+            if (TextContainsSpecialCharacters(word)) throw invalid_argument("special character in the request"s);
+
             const QueryWord query_word = ParseQueryWord(word);
             if (!query_word.is_stop) {
                 if (query_word.is_minus) {

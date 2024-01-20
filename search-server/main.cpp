@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+// Sprint 3 - Final Version
+
 using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
@@ -94,18 +96,25 @@ public:
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words) : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
         for (const string& word : stop_words_) {
-            if (TextContainsSpecialCharacters(word)) throw invalid_argument("special character in stop words"s);
+            if (TextContainsSpecialCharacters(word)) {
+                throw invalid_argument("special character in stop words"s);
+            }
         }
     }
 
     explicit SearchServer(const string& stop_words_text) : SearchServer(SplitIntoWords(stop_words_text)) {}
     
     void AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
-        if (TextContainsSpecialCharacters(document)) throw invalid_argument("special character in the document"s);
-
-        if (document_id < 0) throw invalid_argument("negative ID"s);
+        if (TextContainsSpecialCharacters(document)) {
+            throw invalid_argument("special character in the document"s);
+        }
+        if (document_id < 0) {
+            throw invalid_argument("negative ID"s);
+        }
         for (const auto& id : documents_) {
-            if (document_id == id.first) throw invalid_argument("existing ID"s);
+            if (document_id == id.first) {
+                throw invalid_argument("existing ID"s);
+            }
         }
 
         const vector<string> words = SplitIntoWordsNoStop(document);
@@ -150,7 +159,10 @@ public:
     }
 
     int GetDocumentId(int index) const {
-        if (index < 0 || index > identifiers_.size() - 1) throw out_of_range("the ID is out of acceptable values"s);
+        if (index < 0 || index > identifiers_.size() - 1) {
+            throw out_of_range("the ID is out of acceptable values"s);
+        }
+
         return identifiers_[index];
     }
 
@@ -231,12 +243,19 @@ private:
 
     QueryWord ParseQueryWord(string text) const {
         bool is_minus = false;
+
+        if (TextContainsSpecialCharacters(text)) {
+            throw invalid_argument("special character in the request"s);
+        }
+        if (text == ""s || text.at(0) == '-') {
+            throw invalid_argument("invalid request"s);
+        }
+
         if (text[0] == '-') {
             is_minus = true;
             text = text.substr(1);
         }
 
-        if (text == ""s || text.at(0) == '-') throw invalid_argument("invalid request"s);
         return {text, is_minus, IsStopWord(text)};
     }
 
@@ -249,8 +268,6 @@ private:
         Query query;
 
         for (const string& word : SplitIntoWords(text)) {
-            if (TextContainsSpecialCharacters(word)) throw invalid_argument("special character in the request"s);
-
             const QueryWord query_word = ParseQueryWord(word);
             if (!query_word.is_stop) {
                 if (query_word.is_minus) {
@@ -315,12 +332,12 @@ void PrintDocument(const Document& document) {
 }
 
 int main() {
-    SearchServer search_server("и в на"s);
+    SearchServer search_server("Рё РІ РЅР°"s);
 
     try {
-        search_server.AddDocument(1, "пушистый кот пушистый хвост"s, DocumentStatus::ACTUAL, {7, 2, 7});
-        search_server.AddDocument(2, "пушистый пёс и модный ошейник"s, DocumentStatus::ACTUAL, {1, 2});
-        search_server.FindTopDocuments("кот"s);
+        search_server.AddDocument(1, "РїСѓС€РёСЃС‚С‹Р№ РєРѕС‚ РїСѓС€РёСЃС‚С‹Р№ С…РІРѕСЃС‚"s, DocumentStatus::ACTUAL, {7, 2, 7});
+        search_server.AddDocument(2, "РїСѓС€РёСЃС‚С‹Р№ РїС‘СЃ Рё РјРѕРґРЅС‹Р№ РѕС€РµР№РЅРёРє"s, DocumentStatus::ACTUAL, {1, 2});
+        search_server.FindTopDocuments("РєРѕС‚"s);
     }
     catch (const invalid_argument& e) {
         cout << "Invalid argument: " << e.what() << endl;

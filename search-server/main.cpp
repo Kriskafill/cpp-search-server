@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-// Sprint 3: Final Version (without corrections)
+// Sprint 3: Final Version
 
 using namespace std;
 
@@ -92,18 +92,25 @@ public:
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words) : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
         for (const string& word : stop_words_) {
-            if (TextContainsSpecialCharacters(word)) throw invalid_argument("special character in stop words"s);
+            if (TextContainsSpecialCharacters(word)) {
+                throw invalid_argument("special character in stop words"s);
+            }
         }
     }
 
     explicit SearchServer(const string& stop_words_text) : SearchServer(SplitIntoWords(stop_words_text)) {}
     
     void AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
-        if (TextContainsSpecialCharacters(document)) throw invalid_argument("special character in the document"s);
-
-        if (document_id < 0) throw invalid_argument("negative ID"s);
+        if (TextContainsSpecialCharacters(document)) {
+            throw invalid_argument("special character in the document"s);
+        }
+        if (document_id < 0) {
+            throw invalid_argument("negative ID"s);
+        }
         for (const auto& id : documents_) {
-            if (document_id == id.first) throw invalid_argument("existing ID"s);
+            if (document_id == id.first) {
+                throw invalid_argument("existing ID"s);
+            }
         }
 
         const vector<string> words = SplitIntoWordsNoStop(document);
@@ -148,7 +155,10 @@ public:
     }
 
     int GetDocumentId(int index) const {
-        if (index < 0 || index > identifiers_.size() - 1) throw out_of_range("the ID is out of acceptable values"s);
+        if (index < 0 || index > identifiers_.size() - 1) {
+            throw out_of_range("the ID is out of acceptable values"s);
+        }
+
         return identifiers_[index];
     }
 
@@ -228,13 +238,20 @@ private:
     };
 
     QueryWord ParseQueryWord(string text) const {
+        if (TextContainsSpecialCharacters(text)) {
+            throw invalid_argument("special character in the request"s);
+        }
+
         bool is_minus = false;
         if (text[0] == '-') {
             is_minus = true;
             text = text.substr(1);
         }
 
-        if (text == ""s || text.at(0) == '-') throw invalid_argument("invalid request"s);
+        if (text == ""s || text.at(0) == '-') {
+            throw invalid_argument("invalid request"s);
+        }
+
         return {text, is_minus, IsStopWord(text)};
     }
 
@@ -247,8 +264,6 @@ private:
         Query query;
 
         for (const string& word : SplitIntoWords(text)) {
-            if (TextContainsSpecialCharacters(word)) throw invalid_argument("special character in the request"s);
-
             const QueryWord query_word = ParseQueryWord(word);
             if (!query_word.is_stop) {
                 if (query_word.is_minus) {
@@ -274,7 +289,7 @@ private:
                 continue;
             }
             const double inverse_document_freq = ComputeWordInverseDocumentFreq(word);
-            for (const auto [document_id, term_freq] : word_to_document_freqs_.at(word)) {
+            for (const auto& [document_id, term_freq] : word_to_document_freqs_.at(word)) {
                 if (key_mapper(
                     document_id,
                     documents_.at(document_id).status,
@@ -289,13 +304,13 @@ private:
             if (word_to_document_freqs_.count(word) == 0) {
                 continue;
             }
-            for (const auto [document_id, _] : word_to_document_freqs_.at(word)) {
+            for (const auto& [document_id, _] : word_to_document_freqs_.at(word)) {
                 document_to_relevance.erase(document_id);
             }
         }
 
         vector<Document> matched_documents;
-        for (const auto [document_id, relevance] : document_to_relevance) {
+        for (const auto& [document_id, relevance] : document_to_relevance) {
             matched_documents.push_back({document_id, relevance, documents_.at(document_id).rating});
         }
 

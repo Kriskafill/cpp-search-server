@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-// Sprint 3: Final Version
+// Sprint 4: Education Version (Iterators)
 
 using namespace std;
 
@@ -318,29 +318,97 @@ private:
     }
 };
 
-void PrintDocument(const Document& document) {
-    cout << "{ "s
+template <typename Iterator>
+class IteratorRange {
+public:
+
+    IteratorRange() = default;
+    IteratorRange(Iterator begin, Iterator end) : begin_(begin), end_(end), size_(end - begin) {}
+
+    Iterator begin() const {
+        return begin_;
+    }
+
+    Iterator end() const {
+        return end_;
+    }
+
+    size_t size() const {
+        return size_;
+    }
+
+private:
+    Iterator begin_, end_;
+    size_t size_;
+};
+
+template <typename Iterator>
+class Paginator {
+public:
+
+    explicit Paginator(Iterator range_begin, Iterator range_end, size_t page_size) {
+        while (range_begin != range_end) {
+            auto it = range_end;
+            if (range_end - range_begin > page_size) it = range_begin + page_size;
+            pages_.push_back({ range_begin, it });
+            range_begin = it;
+        }
+    }
+
+    auto begin() const {
+        return pages_.begin();
+    }
+
+    auto end() const {
+        return pages_.end();
+    }
+
+    size_t size() const {
+        return pages_.size();
+    }
+
+private:
+    vector<IteratorRange<Iterator>> pages_;
+};
+
+ostream& operator<<(ostream& output, const Document& document) {
+    output << "{ "s
          << "document_id = "s << document.id << ", "s
          << "relevance = "s << document.relevance << ", "s
          << "rating = "s << document.rating
-         << " }"s << endl;
+         << " }"s;
+
+    return output;
+}
+
+template <typename Iterator>
+ostream& operator<<(ostream& output, const IteratorRange<Iterator>& range) {
+    for (Iterator it = range.begin(); it != range.end(); ++it) {
+        output << *it;
+    }
+
+    return output;
+}
+
+template <typename Container>
+auto Paginate(const Container& c, size_t page_size) {
+    return Paginator(begin(c), end(c), page_size);
 }
 
 int main() {
-    SearchServer search_server("и в на"s);
+    SearchServer search_server("and with"s);
+    search_server.AddDocument(1, "funny pet and nasty rat"s, DocumentStatus::ACTUAL, { 7, 2, 7 });
+    search_server.AddDocument(2, "funny pet with curly hair"s, DocumentStatus::ACTUAL, { 1, 2, 3 });
+    search_server.AddDocument(3, "big cat nasty hair"s, DocumentStatus::ACTUAL, { 1, 2, 8 });
+    search_server.AddDocument(4, "big dog cat Vladislav"s, DocumentStatus::ACTUAL, { 1, 3, 2 });
+    search_server.AddDocument(5, "big dog hamster Borya"s, DocumentStatus::ACTUAL, { 1, 1, 1 });
 
-    try {
-        search_server.AddDocument(1, "пушистый кот пушистый хвост"s, DocumentStatus::ACTUAL, {7, 2, 7});
-        search_server.AddDocument(2, "пушистый пёс и модный ошейник"s, DocumentStatus::ACTUAL, {1, 2});
-        search_server.FindTopDocuments("кот"s);
-    }
-    catch (const invalid_argument& e) {
-        cout << "Invalid argument: " << e.what() << endl;
-    }
-    catch (const out_of_range& e) {
-        cout << "Out of range: " << e.what() << endl;
-    }
-    catch (...) {
-        cout << "Unknown errors" << endl;
+    const auto search_results = search_server.FindTopDocuments("curly dog"s);
+    int page_size = 2;
+    const auto pages = Paginate(search_results, page_size);
+    
+    for (auto page = pages.begin(); page != pages.end(); ++page) {
+        cout << *page << endl;
+        cout << "Page break"s << endl;
     }
 }

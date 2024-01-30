@@ -15,6 +15,8 @@
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 constexpr double ERROR_RATE = 1e-6;
 
+bool TextContainsSpecialCharacters(const std::string& text);
+
 class SearchServer {
 public:
 

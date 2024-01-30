@@ -24,11 +24,3 @@ vector<string> SplitIntoWords(const string& text) {
 
     return words;
 }
-
-bool TextContainsSpecialCharacters(const string& text) {
-    for (const char c : text) {
-        if (c >= 0 && c <= 31) return true;
-    }
-
-    return false;
-}

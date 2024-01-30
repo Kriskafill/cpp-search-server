@@ -9,8 +9,6 @@ std::vector<std::string> SplitIntoWords(const std::string& text);
 template <typename StringContainer>
 std::set<std::string> MakeUniqueNonEmptyStrings(const StringContainer& strings);
 
-bool TextContainsSpecialCharacters(const std::string& text);
-
 template <typename StringContainer>
 std::set<std::string> MakeUniqueNonEmptyStrings(const StringContainer& strings) {
     std::set<std::string> non_empty_strings;

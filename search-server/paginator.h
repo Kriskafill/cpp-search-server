@@ -7,7 +7,7 @@ class IteratorRange {
 public:
 
     IteratorRange() = default;
-    IteratorRange(Iterator begin, Iterator end) : begin_(begin), end_(end), size_(end - begin) {}
+    IteratorRange(Iterator begin, Iterator end) : begin_(begin), end_(end) {}
 
     Iterator begin() const {
         return begin_;
@@ -18,12 +18,12 @@ public:
     }
 
     size_t size() const {
-        return size_;
+        return end_ - begin_;
     }
 
 private:
-    Iterator begin_, end_;
-    size_t size_;
+    Iterator begin_;
+    Iterator end_;
 };
 
 template <typename Iterator>

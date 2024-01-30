@@ -2,6 +2,14 @@
 
 using namespace std;
 
+bool TextContainsSpecialCharacters(const string& text) {
+    for (const char c : text) {
+        if (c >= 0 && c <= 31) return true;
+    }
+
+    return false;
+}
+
 void SearchServer::AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
     if (TextContainsSpecialCharacters(document)) {
         throw invalid_argument("special character in the document"s);

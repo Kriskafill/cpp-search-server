@@ -19,7 +19,7 @@ private:
 
     struct QueryResult {
         std::string query;
-        std::vector<Document> result;
+        bool isEmptyResult;
     };
 
     std::deque<QueryResult> requests_;
@@ -38,8 +38,9 @@ std::vector<Document> RequestQueue::AddFindRequest(const std::string& raw_query,
         requests_.pop_back();
     }
 
-    const QueryResult result = { raw_query, search_server_.FindTopDocuments(raw_query, document_predicate) };
+    const std::vector<Document> documents = search_server_.FindTopDocuments(raw_query, document_predicate);
+    const QueryResult result = { raw_query, documents.empty() };
     requests_.push_front(result);
 
-    return result.result;
+    return documents;
 }

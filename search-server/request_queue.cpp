@@ -17,6 +17,6 @@ vector<Document> RequestQueue::AddFindRequest(const string& raw_query) {
 
 int RequestQueue::GetNoResultRequests() const {
     return count_if(requests_.begin(), requests_.end(), [](const QueryResult& query) {
-        return query.isEmptyResult;
+        return query.is_empty_result;
     });
 }

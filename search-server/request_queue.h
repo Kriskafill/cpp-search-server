@@ -19,7 +19,7 @@ private:
 
     struct QueryResult {
         std::string query;
-        bool isEmptyResult;
+        bool is_empty_result;
     };
 
     std::deque<QueryResult> requests_;

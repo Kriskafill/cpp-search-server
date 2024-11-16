@@ -7,8 +7,6 @@
 
 #include <iostream>
 
-// Sprint 4: Final Version
-
 int main() {
     using namespace std::literals;
     SearchServer search_server("and in at"s);
